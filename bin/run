@@ -1,0 +1,39 @@
+#!/bin/bash
+
+GRAPHITE_SCHEME=${GRAPHITE_SCHEME:-http}
+GRAPHITE_HOST=${GRAPHITE_HOST:-localhost}
+GRAPHITE_PORT=${GRAPHITE_PORT:-2003}
+ES_SCHEME=${ES_SCHEME:-http}
+ES_HOST=${ES_HOST:-localhost}
+ES_PORT=${ES_PORT:-9200}
+
+cat << EOF > /grafana/config.js
+define(['settings'],
+  function(Settings) {
+    "use strict";
+    return new Settings({
+      datasources: {
+        graphite: {
+          type: 'graphite',
+          url: "${GRAPHITE_SCHEME}://${GRAPHITE_HOST}:${GRAPHITE_PORT}",
+        },
+        elasticsearch: {
+          type: 'elasticsearch',
+          url: "${ES_SCHEME}://${ES_HOST}:${ES_PORT}",
+          index: 'grafana-dash',
+          grafanaDB: true,
+        }
+      },
+      default_route: '/dashboard/file/default.json',
+      timezoneOffset: null,
+      grafana_index: "grafana-dash",
+      panel_names: [
+        'text',
+        'graphite'
+      ]
+    });
+  }
+);
+EOF
+
+/usr/bin/supervisord
